@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
+    // BUG FIX: advertising env var presence is unnecessary information leakage.
+    // A public health endpoint should only confirm the service is alive.
     return NextResponse.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-      lighthouseApiKey: process.env.LIGHTHOUSE_API_KEY ? 'SET' : 'NOT SET',
-      lighthouseStorageHash: process.env.LIGHTHOUSE_STORAGE_HASH ? 'SET' : 'NOT SET'
     });
   } catch (error) {
     return NextResponse.json(

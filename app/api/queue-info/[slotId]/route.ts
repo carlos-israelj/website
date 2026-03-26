@@ -106,8 +106,17 @@ export async function GET(
 
   } catch (error) {
     console.error('❌ Error getting queue info:', error);
+    // BUG FIX: Error details were exposed to clients, revealing implementation details
+    // that could aid attackers. In production, only return generic error messages.
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      );
+    }
+    // In development, include details for debugging
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown'
       },

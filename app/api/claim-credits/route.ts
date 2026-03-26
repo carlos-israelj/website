@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { isValidWalletAddress, isValidSessionId } from '@/lib/validation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,6 +12,22 @@ export async function POST(request: NextRequest) {
     if (!sessionId || !walletAddress) {
       return NextResponse.json(
         { success: false, error: 'Missing sessionId or walletAddress' },
+        { status: 400 }
+      );
+    }
+
+    // BUG FIX: Wallet address and session ID were not validated before use in database queries.
+    // Malformed values could cause application errors or be exploited for injection attacks.
+    if (!isValidWalletAddress(walletAddress)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid wallet address format' },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidSessionId(sessionId)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid session ID format' },
         { status: 400 }
       );
     }

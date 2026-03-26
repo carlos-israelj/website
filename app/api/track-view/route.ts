@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { isValidWalletAddress, isValidSessionId } from '@/lib/validation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,6 +18,35 @@ export async function POST(request: NextRequest) {
     if (!placementId || !sessionId || !viewDuration) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // BUG FIX: viewDuration was accepted from the client without any validation.
+    // A malicious user could POST viewDuration=999999 to claim maximum credits
+    // without watching any ad.  The valid milestones are [10, 30, 60, 120, 240, 480]
+    // seconds (as defined in Ad402Slot.tsx).  Any value outside this set is rejected.
+    const VALID_VIEW_DURATIONS = [10, 30, 60, 120, 240, 480];
+    const parsedDuration = Number(viewDuration);
+    if (!VALID_VIEW_DURATIONS.includes(parsedDuration)) {
+      console.warn('⚠️ Rejected invalid viewDuration:', viewDuration);
+      return NextResponse.json(
+        { success: false, error: `Invalid viewDuration. Must be one of: ${VALID_VIEW_DURATIONS.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // BUG FIX: Validate wallet address and session ID if provided to prevent malformed data
+    if (walletAddress && !isValidWalletAddress(walletAddress)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid wallet address format' },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidSessionId(sessionId)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid session ID format' },
         { status: 400 }
       );
     }

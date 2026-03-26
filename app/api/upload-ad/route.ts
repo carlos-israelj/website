@@ -41,8 +41,18 @@ export async function POST(request: NextRequest) {
     console.log('🔗 Media hash:', mediaHash);
     console.log('💰 Payment data:', JSON.stringify(paymentData, null, 2));
 
-    // Calculate duration (default 1 hour)
-    const durationMinutes = 60;
+    // BUG FIX: durationMinutes was hardcoded to 60, ignoring the duration
+    // the advertiser actually paid for.  paymentData.duration carries the
+    // chosen duration string (e.g. '30m', '1h', '6h', '24h').  Parse it so
+    // the placement expires when the paid window ends, not always after 1 hour.
+    const DURATION_MAP: Record<string, number> = {
+      '30m': 30,
+      '1h': 60,
+      '6h': 360,
+      '24h': 1440,
+    };
+    const rawDuration: string = paymentData.duration || '1h';
+    const durationMinutes = DURATION_MAP[rawDuration] ?? 60;
     const startsAt = new Date();
     const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000);
 

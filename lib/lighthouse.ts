@@ -1,7 +1,13 @@
 import lighthouse from '@lighthouse-web3/sdk';
 
-// Lighthouse API key - you should set this in your environment variables
-const LIGHTHOUSE_API_KEY = "fffcf55d.c6d9feaf3e8e4974b6b933da73418816"
+// BUG FIX: API key was hardcoded in source, exposing it to anyone with repository
+// access, git history, or compiled code. This key must be stored in environment
+// variables only. The exposed key should be rotated immediately.
+const LIGHTHOUSE_API_KEY = process.env.LIGHTHOUSE_API_KEY || "";
+
+if (!LIGHTHOUSE_API_KEY) {
+  console.error('⚠️ LIGHTHOUSE_API_KEY environment variable is not set');
+}
 
 export interface UploadResult {
   success: boolean;

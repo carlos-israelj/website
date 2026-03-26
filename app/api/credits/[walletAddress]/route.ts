@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { isValidWalletAddress } from '@/lib/validation';
 
 export async function GET(
   request: NextRequest,
@@ -12,6 +13,12 @@ export async function GET(
 
     if (!walletAddress) {
       return NextResponse.json({ error: 'Wallet address required' }, { status: 400 });
+    }
+
+    // BUG FIX: Wallet address was not validated before use in database query.
+    // Malformed addresses could cause errors or be exploited.
+    if (!isValidWalletAddress(walletAddress)) {
+      return NextResponse.json({ error: 'Invalid wallet address format' }, { status: 400 });
     }
 
     // Get user credits

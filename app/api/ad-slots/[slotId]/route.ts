@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+// BUG FIX: must use the shared singleton from @/lib/prisma, not new PrismaClient().
+// Every other route in this project already does this correctly.
+import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,

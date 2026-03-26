@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+// BUG FIX: must use the shared singleton from @/lib/prisma, not new PrismaClient().
+// Every other route in this project already does this correctly.
+import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-
-const prisma = new PrismaClient();
 
 const createSlotSchema = z.object({
   publisherWallet: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
